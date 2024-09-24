@@ -22,27 +22,38 @@
       <tbody>
         <tr v-for="course in coursesfo" :key="course.id">
           <td class="border px-4 py-2">{{ course.nombre }}</td>
-          <td class="border px-4 py-2">{{ typeof course.categoria === 'string' ? course.categoria : course.categoria.join(', ') }}</td>
+          <td class="border px-4 py-2">{{ typeof course.categoria === 'string' ? course.categoria :
+            course.categoria.join(', ') }}</td>
           <td class="border px-4 py-2">{{ course.descripcion }}</td>
           <td class="border px-4 py-2">{{ course.cantidadAlumnos }}</td>
           <td class="border px-4 py-2">{{ new Date(course.inicio).toLocaleDateString() }}</td>
           <td class="border px-4 py-2">{{ new Date(course.fin).toLocaleDateString() }}</td>
           <td class="border px-4 py-2">{{ course.precio }}</td>
           <td class="border px-4 py-2">
-            <a :href="'/courses/' + course.id + '/students'" class="text-blue-500 hover:underline">
-              Ver alumnos
-            </a>
+            <div class="flex gap-x-2">
+              <a :href="'/courses/' + course.id + '/students'" class="text-blue-500 hover:underline">
+                Ver alumnos
+              </a>
+
+              <button @click="startUpdateCourse(course)" class="text-white bg-indigo-500 hover:bg-indigo-600 p-2 rounded">Editar curso</button>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <CourseForm @saved="onSaved(course)" />
+    <CourseForm @submitted="saveOne" />
+    <Modal v-if="updatingCourse" :isOpen="true" @close="updatingCourse = null" title="Actualizar curso">
+      <div class="grid w-[50vw]">
+      <CourseForm :dataCourse="updatingCourse" @submitted="updateCourse" />
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script>
 import CourseForm from '../components/Forms/CourseForm.vue';
+import Modal from '../components/Modal.vue';
 
 // type Course = {
 //   id: number;
@@ -58,11 +69,13 @@ import CourseForm from '../components/Forms/CourseForm.vue';
 export default {
   components: {
     CourseForm,
+    Modal,
   },
   data() {
     return {
       allCourses: [],
       search: '',
+      updatingCourse: null,
     };
   },
   methods: {
@@ -79,9 +92,61 @@ export default {
       }
     },
 
-    onSaved(course) {
-      this.allCourses.push(course);
-    }
+    startUpdateCourse(course) {
+      this.updatingCourse = course;
+    },
+
+    async saveOne(course) {
+      try {
+
+        const response = await fetch('https://662aa18dd3f63c12f4583be5.mockapi.io/api/pt/cursos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(course),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al crear el curso');
+        }
+
+        const saved = await response.json();
+        this.allCourses.push(saved);
+      } catch {
+        console.error('Error al crear el curso');
+      }
+    },
+
+    async updateCourse(updatedCourse) {
+      try {
+        const response = await fetch(`https://662aa18dd3f63c12f4583be5.mockapi.io/api/pt/cursos/${this.updatingCourse.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedCourse),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al actualizar el curso');
+        }
+
+        const updatedData = await response.json();
+
+        // Update the local list of courses with the updated data
+        const index = this.allCourses.findIndex(course => course.id === updatedData.id);
+        if (index !== -1) {
+          this.allCourses.splice(index, 1, updatedData);
+        }
+
+        // Close the modal
+        this.updatingCourse = null;
+
+      } catch (error) {
+        console.error('Error al actualizar el curso:', error);
+      }
+    },
   },
   mounted() {
     this.getCourses();
