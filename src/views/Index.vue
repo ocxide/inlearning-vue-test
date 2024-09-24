@@ -22,7 +22,7 @@
       <tbody>
         <tr v-for="course in coursesfo" :key="course.id">
           <td class="border px-4 py-2">{{ course.nombre }}</td>
-          <td class="border px-4 py-2">{{ course.categoria }}</td>
+          <td class="border px-4 py-2">{{ typeof course.categoria === 'string' ? course.categoria : course.categoria.join(', ') }}</td>
           <td class="border px-4 py-2">{{ course.descripcion }}</td>
           <td class="border px-4 py-2">{{ course.cantidadAlumnos }}</td>
           <td class="border px-4 py-2">{{ new Date(course.inicio).toLocaleDateString() }}</td>
@@ -36,10 +36,14 @@
         </tr>
       </tbody>
     </table>
+
+    <CourseForm @saved="onSaved(course)" />
   </div>
 </template>
 
 <script>
+import CourseForm from '../components/Forms/CourseForm.vue';
+
 // type Course = {
 //   id: number;
 //   nombre: string;
@@ -52,6 +56,9 @@
 // }
 
 export default {
+  components: {
+    CourseForm,
+  },
   data() {
     return {
       allCourses: [],
@@ -71,12 +78,16 @@ export default {
         console.error('Error fetching cursos:', error);
       }
     },
+
+    onSaved(course) {
+      this.allCourses.push(course);
+    }
   },
   mounted() {
     this.getCourses();
   },
   computed: {
-    coursesfo: function() {
+    coursesfo: function () {
       return this.allCourses.filter((course) => {
         return course.nombre.toLowerCase().includes(this.search.toLowerCase());
       })
