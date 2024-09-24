@@ -23,16 +23,21 @@
             </tbody>
         </table>
 
-        <StudentForm @appsubmit="saveUser(user)" />
+        <div class="w-full grid gap-4">
+            <StudentList @student-selected="addExisting" />
+            <StudentForm @appsubmit="saveUser" />
+        </div>
     </div>
 </template>
 
 <script>
 import StudentForm from '../components/Forms/StudentForm.vue';
+import StudentList from '../components/StudentList.vue';
 
 export default {
     components: {
         StudentForm,
+        StudentList,
     },
     data() {
         return {
@@ -73,6 +78,9 @@ export default {
                 console.error('Error submitting user data:', error);
                 // Handle error appropriately (e.g., show an error message)
             }
+        },
+        addExisting(student) {
+            this.course.alumnos.push(student);
         }
     },
     mounted() {

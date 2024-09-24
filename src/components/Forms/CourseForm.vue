@@ -89,7 +89,7 @@
         <div class="flex justify-between">
           <button
             type="submit"
-            class="bg-blue-500 text-white py-2 px-4 rounded"
+            class="bg-indigo-500 text-white py-2 px-4 rounded"
           >
             Crear Curso
           </button>
